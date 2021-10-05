@@ -2,27 +2,23 @@ package com.znaczek.agw.filters;
 
 
 import com.znaczek.agw.security.EmptyAuthentication;
+import com.znaczek.agw.session.SessionTimeoutResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collection;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class SessionFilter implements GlobalFilter {
 
+  private final SessionTimeoutResolver sessionTimeoutResolver;
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     return chain.filter(exchange)
@@ -33,17 +29,11 @@ public class SessionFilter implements GlobalFilter {
           .defaultIfEmpty(new EmptyAuthentication())
       )
       .doOnNext(z -> {
-        WebSession s = z.getT1();
         Authentication a = z.getT2();
-        Instant sessionExpiresIn =  s.getLastAccessTime().plus(s.getMaxIdleTime());
-        var cb = ResponseCookie
-          .from("SESSION_EXPIRES_IN", String.valueOf(sessionExpiresIn.getEpochSecond()))
-          .path("/")
-          .sameSite("Lax");
-        if (!a.isAuthenticated()) {
-          cb.maxAge(Duration.ZERO);
+        if (a.isAuthenticated()) {
+          WebSession s = z.getT1();
+          exchange.getResponse().getHeaders().add(SessionTimeoutResolver.SESSION_EXPIRATION, sessionTimeoutResolver.getTimeout(s));
         }
-        exchange.getResponse().addCookie(cb.build());
       }).then();
   }
 

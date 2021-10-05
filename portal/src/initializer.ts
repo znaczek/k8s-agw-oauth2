@@ -1,4 +1,5 @@
 import { restoreRedirectUrl } from './auth/after-redirect';
+import { storeSession } from './auth/session-manager';
 
 
 interface InitData {
@@ -6,7 +7,7 @@ interface InitData {
   lang: string
 }
 
-interface AVAILABLE_LANGS {[key: string]: string};
+interface AVAILABLE_LANGS {[key: string]: string}
 
 const getAvailableLanguages = (): AVAILABLE_LANGS => {
   return SETTINGS.AVAILABLE_LANGUAGES.split(',').reduce((acc, curr) => {
@@ -31,6 +32,7 @@ const getLangFromCookie = (availableLangs: AVAILABLE_LANGS) => {
 export const initialize = (): InitData => {
   const search = new URLSearchParams(window.location.search);
   if (search.get('login') === 'true') {
+    storeSession(search.get("session"), search.get("session_expires_in"));
     restoreRedirectUrl();
     return {
       init: false,

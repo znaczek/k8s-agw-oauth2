@@ -1,4 +1,5 @@
 import { AuthData } from './auth.context';
+import { client } from '../api/client';
 
 export const getAuth = async (): Promise<AuthData> => {
   if (!SETTINGS.AUTH) {
@@ -13,35 +14,20 @@ export const getAuth = async (): Promise<AuthData> => {
 
   let whoami;
   try {
-    whoami = await fetch('/whoami');
+    whoami = await client('/whoami', {raw: true});
   } catch(e) {
+    const loginUrl = e.headers.get('X-auth-entrypoint');
     return {
       user: undefined,
-      loginUrl: undefined,
-      error: true,
-    }
-  }
-
-  const status = whoami.status;
-  if (status >= 500) {
-    return {
-      user: undefined,
-      loginUrl: undefined,
-      error: true,
+      loginUrl,
+      error: !loginUrl,
     }
   }
 
   const body = (await whoami.text());
-  if (status === 200) {
-    return {
-      user: JSON.parse(body),
-      loginUrl: undefined,
-      error: false,
-    }
-  }
   return {
-    user: undefined,
-    loginUrl: whoami.headers.get('X-auth-entrypoint') || '',
+    user: JSON.parse(body),
+    loginUrl: undefined,
     error: false,
   }
 }

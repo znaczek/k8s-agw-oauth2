@@ -3,7 +3,7 @@ import { client } from './client';
 
 export class UsersService {
   public async getList(): Promise<User[]> {
-    return client('/api/users/users');
+    return client<User[]>('/api/users/users');
   }
 }
 

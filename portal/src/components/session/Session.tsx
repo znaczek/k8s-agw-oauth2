@@ -1,25 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { getSession } from '../../auth/session-manager';
+import { logout } from '../../auth/logout';
 
 const getTimeLeft = () => {
-  const sessionExpiresIn = (document.cookie || '')
-    .split(';')
-    .map((c) => c.trim())
-    .find((c) => c.includes('SESSION_EXPIRES_IN'))
-    ?.split('=')[1] || '';
+  const sessionExpiresIn = getSession().sessionExpiresIn || '';
 
   if (sessionExpiresIn === '') {
     return 0;
   }
   const now = Math.round(Date.now() / 1000);
   return parseInt(sessionExpiresIn) - now;
-}
-
-const logout = () => {
-  const logoutForm = document.createElement('form');
-  logoutForm.setAttribute('action', '/logout')
-  logoutForm.setAttribute('method', 'POST')
-  document.body.appendChild(logoutForm);
-  logoutForm.submit();
 }
 
 export function Session() {

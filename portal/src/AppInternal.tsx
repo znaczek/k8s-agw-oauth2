@@ -6,6 +6,7 @@ import { Session } from './components/session/Session';
 import { Trans } from 'react-i18next';
 import { AuthContext } from './auth/auth.context';
 import { setRedirectUrl } from './auth/after-redirect';
+import { logout } from './auth/logout';
 
 let didLogIn = false;
 
@@ -35,9 +36,7 @@ export function AppInternal() {
       <header>
         <Link to="/app" className='brand'><Trans>APP</Trans></Link>
         <p className='user-name'>{user?.name || 'NO_NAME'}</p>
-        <form action="/logout" method="POST">
-          <button type='submit'><Trans>LOGOUT</Trans></button>
-        </form>
+        <button type='button' onClick={logout}><Trans>LOGOUT</Trans></button>
       </header>
       <aside>
         <ul>

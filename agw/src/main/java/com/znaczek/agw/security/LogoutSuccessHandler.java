@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.WebFilterExchange;
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -31,7 +32,12 @@ public class LogoutSuccessHandler implements ServerLogoutSuccessHandler {
     ServerHttpResponse response = webExchange.getExchange().getResponse();
     response.setStatusCode(HttpStatus.FOUND);
     response.getHeaders().setLocation(URI.create(logoutUrl));
-    return Mono.empty();
+    return webExchange.getExchange()
+      .getSession()
+      .doOnNext(webSession -> {
+        webSession.invalidate();
+      })
+      .then();
   }
 
 }

@@ -3,6 +3,7 @@ package com.znaczek.agw.controller;
 import com.znaczek.agw.security.EmptyAuthentication;
 import com.znaczek.agw.security.LoginLinksProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -36,8 +37,11 @@ public class WhoAmIController {
         if (p.isAuthenticated()) {
           return new ResponseEntity<>(((OAuth2AuthenticationToken)p).getPrincipal().getAttributes(), HttpStatus.OK);
         } else {
-          exchange.getResponse().getHeaders().add(AUTH_ENTRYPOINT_HEADER_NAME, loginLinksProvider.provide());
-          return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+          HttpHeaders headers = new HttpHeaders();
+          headers.add(AUTH_ENTRYPOINT_HEADER_NAME, loginLinksProvider.provide());
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .headers(headers)
+            .build();
         }
       });
   }
